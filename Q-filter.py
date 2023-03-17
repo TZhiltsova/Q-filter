@@ -1,22 +1,41 @@
 import openpyxl
 
-book = openpyxl.load_workbook('scimagojr 2021.xlsx')
-sheet = book['scimagojr 2021']
-title_column = 'B'
-Q_column = 'F'
-Q_factor = 'Q1'
-title_Q = {}
-for i in range(1, sheet.max_row+1):
-    title_Q[sheet[title_column + str(i)].value] = sheet[Q_column + str(i)].value
 
-Q_required = []
-for key, val in title_Q.items():
-    if val == Q_factor:
-        Q_required.append(key)
+def q_filter(path, sheet_name, title_column, q_column, q_factor, path_output):
+    '''
+        :param path: takes the pass to input exel file
+        :param sheet_name: takes the name of sheet for analysis
+        :param title_column: letter of  column with title of journals
+        :param q_column: letter of column with Q factor
+        :param q_factor: required Q factor
+        :param path_output: pass for saving output file
+        :return: file with list of journals with corresponding Q factor, in format for SQL searching
+    '''
+    print('Searching has been started...')
+    book = openpyxl.load_workbook(path)
+    sheet = book[sheet_name]
+    title_q = {}
+    for i in range(1, sheet.max_row+1):
+        title_q[sheet[title_column + str(i)].value] = sheet[q_column + str(i)].value
+    q_required = []
+    for key, val in title_q.items():
+        if val == q_factor:
+            q_required.append(key)
+    with open(path_output + 'Q_factor_list.txt', 'w') as q_list:
+        for elem in q_required:
+            if q_required.index(elem) == len(q_required) - 1:
+                q_list.write('SRCID (' + elem + ')')
+            else:
+                q_list.write('SRCID (' + elem + ')' + ' OR ')
+    print('File was saved to: ' + path_output)
+    return
 
-with open('Q_factor_list.txt', 'w') as q_list:
-    for elem in Q_required:
-        if Q_required.index(elem) == len(Q_required) - 1:
-            q_list.write('SRCID (' + elem + ')')
-        else:
-            q_list.write('SRCID (' + elem + ')' + ' OR ')
+
+path_to_file = input('Print path to file: ')
+sheet_name_in_file = input('Print sheet name: ')
+title_column_in_file = input('Print column with journal titles (A, B, C itc.): ')
+Q_column_in_file = input('Print column with Q factor (A, B, C itc.): ')
+Q_factor_in_file = input('Print required Q factor (Q1, Q2 itc.): ')
+path_output_to_file = input('Print path to directory for output file: ')
+q_filter(path_to_file, sheet_name_in_file, title_column_in_file, Q_column_in_file, Q_factor_in_file,
+         path_output_to_file)
